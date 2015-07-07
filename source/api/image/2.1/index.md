@@ -541,6 +541,7 @@ The set of features that may be specified in the `supports` property of an Image
 | `profileLinkHeader` | The profile HTTP link header is provided on image responses. |
 | `regionByPct` |  Regions of images may be requested by percentage.  |
 | `regionByPx` |   Regions of images may be requested by pixel dimensions.  |
+| `regionSquare` |  A square region where the width and height are equal to the shorter side of the complete image content. |
 | `rotationArbitrary` |   Rotation of images may be requested by degrees other than multiples of 90.  |
 | `rotationBy90s` |   Rotation of images may be requested by degrees in multiples of 90.  |
 | `sizeAboveFull` | Size of images may be requested larger than the "full" size. |
