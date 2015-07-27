@@ -27,7 +27,7 @@ Added the `rendering` property.
 
 ### Allow date-based user interfaces for navigation
 
-Added the `viewingDate` property.
+Added the `navDate` property.
 
 ### Annotations of non-Canvas Resources
 
@@ -37,11 +37,16 @@ AnnotationLists may be referenced from any resource, when the annotations in the
 
 Add a "facingPages" `viewingHint` value to capture the situation when a single canvas represents both sides of an open spread.  This is common in older digitization projects and also with Eastern works.
 
-### Clarifications
+### Multi-Part Collections Viewing Hint
+
+Add a "multi-part" `viewingHint` value for the situation when a collection has manifests that are part of a logical whole.
+
+
+## Clarifications
 
 Several clarifications were made:
 
-* Clarify the intended usage of the "continuous" `viewingHint`
+* Clarify the intended usage of the "continuous" `viewingHint` ; technically this is a breaking change, but the original specification was unable to be implemented (the semantics were identical to those of the "individuals" `viewingHint`), it was impossible for any implementations to be affected.
 * Add a table specifying whether a resource should be dereferenceable or not
 
 ### Editorial
