@@ -151,11 +151,18 @@ thumbnail
 ####  4.2. Rights and Licensing Properties
 
 attribution
-:   A human readable label that _MUST_ be displayed when the resource it is associated with is displayed or used. For example, this could be used to present copyright or ownership statements, or simply an acknowledgement of the owning and/or publishing institutions.
+:   Text that _MUST_ be shown when the resource it is associated with is displayed or used. For example, this could be used to present copyright or ownership statements, or simply an acknowledgement of the owning and/or publishing institution.
 
     Usage:
     {: .usage}
     * Any resource _MAY_ have one or more attribution labels.
+
+license
+:   A link to an external resource that describes the license or rights statement under which the resource is being used. The rationale for this being a URI and not a human readable label is that typically there is one license for many resources, and the text is too long to be displayed to the user along with the object. If displaying the text is a requirement, then it is _RECOMMENDED_ to include the information using the `attribution` property instead.
+
+    Usage:
+    {: .usage}
+    * Any resource _MAY_ have one or more licenses associated with it.
 
 logo
 :   A small image that represents an individual or organization associated with the resource it is attached to.  This could be the logo of the owning or hosting institution.  It is _RECOMMENDED_ that a [IIIF Image API][image-api] service be available for this image for manipulations such as resizing.
@@ -164,12 +171,7 @@ logo
     {: .usage}
     * Any resource _MAY_ have one or more logos associated with it.
 
-license
-:   A link to an external resource that describes the license or rights statement under which the resource is being used. The rationale for this being a URI and not a human readable label is that typically there is one license for many resources, and the text is too long to be displayed to the user along with the object. If displaying the text is a requirement, then it is _RECOMMENDED_ to include the information using the `attribution` property instead.
 
-    Usage:
-    {: .usage}
-    * Any resource _MAY_ have one or more licenses associated with it.
 
 ####  4.3. Technical Properties
 
