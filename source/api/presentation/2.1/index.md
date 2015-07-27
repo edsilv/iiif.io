@@ -151,14 +151,14 @@ thumbnail
 ####  4.2. Rights and Licensing Properties
 
 attribution
-:   Text that _MUST_ be shown when the resource it is associated with is displayed or used. For example, this could be used to present copyright or ownership statements, or simply an acknowledgement of the owning and/or publishing institution.
+:   Text that _MUST_ be shown when the resource it is associated with is displayed or used. For example, this could be used to present copyright or ownership statements, or simply an acknowledgement of the owning and/or publishing institution.   In the case where multiple values are supplied for attribution, clients _MUST_ display at least one value. Clients _SHOULD_ try to match the language preferred by the user, and if the preferred language is unclear or unavailable, then the client may choose which value to display.
 
     Usage:
     {: .usage}
     * Any resource _MAY_ have one or more attribution labels.
 
 license
-:   A link to an external resource that describes the license or rights statement under which the resource is being used. The rationale for this being a URI and not a human readable label is that typically there is one license for many resources, and the text is too long to be displayed to the user along with the object. If displaying the text is a requirement, then it is _RECOMMENDED_ to include the information using the `attribution` property instead.
+:   A link to an external resource that describes the license or rights statement under which the resource may be used. The rationale for this being a URI and not a human readable label is that typically there is one license for many resources, and the text is too long to be displayed to the user along with the object. If displaying the text is a requirement, then it is _RECOMMENDED_ to include the information using the `attribution` property instead.
 
     Usage:
     {: .usage}
@@ -170,7 +170,6 @@ logo
     Usage:
     {: .usage}
     * Any resource _MAY_ have one or more logos associated with it.
-
 
 
 ####  4.3. Technical Properties
@@ -514,7 +513,11 @@ The example below includes only the manifest-level information, however it _MUST
   // Rights Information
   "license": "http://www.example.org/license.html",
   "attribution": "Provided by Example Organization",
-  "logo": "http://www.example.org/logos/institution1.jpg",
+
+  "logo": {
+    "@id":http://www.example.org/logos/institution1.jpg",
+
+  },
 
   // Links
   "related":{
@@ -691,7 +694,7 @@ Additional features of the [Open Annotation][openanno] data model _MAY_ also be 
     "service": {
       "@context": "http://iiif.io/api/image/{{ site.image_api.latest.major }}/context.json",
       "@id": "http://www.example.org/images/book1-page1",
-      "profile": "http://iiif.io/api/image/{{ site.image_api.latest.major }}/profiles/level2.json",
+      "profile": "http://iiif.io/api/image/{{ site.image_api.latest.major }}/profiles/level2.json"
     },
     "height":2000,
     "width":1500
