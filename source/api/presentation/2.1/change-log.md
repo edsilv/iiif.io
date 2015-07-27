@@ -62,9 +62,6 @@ Several editorial changes were made:
 
 Zones continue to be deferred, awaiting strong, shared use cases.
 
-### Target Audience
-
-Target Audience continues to be deferred.
 
 
 [deferred-proposals]: #deferred-proposals "Presentation API 2.1 Deferred Proposals"
