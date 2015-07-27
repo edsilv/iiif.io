@@ -60,7 +60,7 @@ This specification concerns image requests by a client, but not management of th
 The IIIF Image API can be called in two ways:
 
  * Request an image, which may be part of a larger image.
- * Request a description of the image characteristics and functionality available for that image.
+ * Request information about the image, including characteristics, functionality available, and related services.
 
 Both convey the request's information in the path segments of the URI, rather than as query parameters. This makes responses easier to cache, either at the server or by standard web-caching infrastructure. It also permits a minimal implementation using pre-computed files in a matching directory structure.
 
@@ -173,7 +173,7 @@ Examples:
         <p><code>.../pct:41.6,7.5,40,70/full/0/default.jpg</code></p>
       </td>
     </tr>
-    <tr>      
+    <tr>
       <td>
         <img src="img/region_px_over.png" alt="Region by Pixels" class="fullPct" />
         <p><strong>5</strong> region=125,15,200,200</p>
@@ -431,23 +431,27 @@ Link: <http://iiif.example.com/server/full/full/0/default.jpg>;rel="canonical"
 
 The server _MAY_ include this link header on the Image Information response, however it is unnecessary as it is included in the JSON representation retrieved.
 
-##  5. Information Request
+##  5. Image Information
 
-The Image Information document contains both metadata about the image, such as full height and width, and functionality available for it, such as the formats in which it may be retrieved.  The service _MUST_ return this information about the image. The request for the information _MUST_ conform to the URI Template:
+Servers _MUST_ support requests for image information. The response includes technical properties about the image and may also contain rights and licensing properties, and related services.
+
+### 5.1. Image Information Request
+
+The request for the information _MUST_ conform to the URI Template:
 
 ```
 {scheme}://{server}{/prefix}/{identifier}/info.json
 ```
 {: .urltemplate}
 
-The syntax for the response is [JSON-LD][json-ld-w3c]. The content-type of the response _MUST_ be either "application/json" (regular JSON), 
+The syntax for the response is [JSON-LD][json-ld-w3c]. The content-type of the response _MUST_ be either "application/json" (regular JSON),
 
 ```
 Content-Type: application/json
 ```
 {: .urltemplate}
 
-or "application/ld+json" (JSON-LD). 
+or "application/ld+json" (JSON-LD).
 
 ```
 Content-Type: application/ld+json
@@ -456,7 +460,7 @@ Content-Type: application/ld+json
 
 If the client explicitly wants the JSON-LD content-type, then it _MUST_ specify this in an Accept header, otherwise the server _MUST_ return the regular JSON content-type.
 
-If the regular JSON content-type is returned, then it is _RECOMMENDED_ that the server provide a link header to the context document. The syntax for the link header is below, and further [described in section 6.8 of the JSON-LD specification][json-as-json-ld]. If the client requests "application/ld+json", the link header _MAY_ still be included but _MUST_ be ignored. The entity body is identical regardless of the content-type, including the `@context` field.
+If the regular JSON content-type is returned, then it is _RECOMMENDED_ that the server provide a link header to the context document. The syntax for the link header is below, and further [described in section 6.8 of the JSON-LD specification][json-as-json-ld]. If the client requests "application/ld+json", the link header _MAY_ still be included but _MUST_ be ignored. The entity body is identical regardless of the content-type, including the `@context` field. Linked data implementations may construct the response using the frame supplied in the [JSON-LD framing implementation note][annex-frames].
 
 ```
 Link: <http://iiif.io/api/image/{{ page.major }}/context.json>
@@ -474,52 +478,67 @@ Access-Control-Allow-Origin: *
 
 A recipe for enabling these behaviors is provided in the [Apache HTTP Server Implementation Notes][apache-notes-conditional-content-type].
 
+### 5.2. Technical Properties
 
-### 5.1. Image Information
-
-The JSON at the top level of the response will include the following properties:
-
-| Property   | Required? | Description |
+| Technical Property   | Required? | Description |
 | ---------- | --------- | ----------- |
 | `@context` | Required | The context document that describes the semantics of the terms used in the document. This must be the URI: `http://iiif.io/api/image/{{ page.major }}/context.json` for version {{ page.major }}.{{ page.minor }} of the IIIF Image API. This document allows the response to be interpreted as RDF, using the [JSON-LD][json-ld-org] serialization. |
 | `@id` | Required | The Base URI of the image as defined in [URI Syntax][uri-syntax], including scheme, server, prefix and identifier without a trailing slash. |
 | `protocol` | Required | The URI `http://iiif.io/api/image` which can be used to determine that the document describes an image service which is a version of the IIIF Image API. |
 | `width` | Required | The width in pixels of the full image content, given as an integer. |
 | `height` | Required | The height in pixels of the full image content, given as an integer. |
-| `profile` | Required | An array of profiles, indicated by either a URI or an object describing the features supported.  The first entry in the array _MUST_ be a compliance level URI, as defined below. |
+| `profile` | Required | A list of profiles, indicated by either a URI or an object describing the features supported. The first entry in the list _MUST_ be a [compliance level URI][compliance-levels]. |
 | `sizes` | Optional | A set of height and width pairs the client should use in the `size` parameter to request complete images at different sizes that the server has available. This may be used to let a client know the sizes that are available when the server does not support requests for arbitrary sizes, or simply as a hint that requesting an image of this size may result in a faster response. A request constructed with the `w,h` syntax using these sizes _MUST_ be supported by the server, even if arbitrary width and height are not. |
 | `tiles` | Optional | A set of descriptions of the parameters to use to request regions of the image (tiles) that are efficient for the server to deliver. Each description gives a width, optionally a height for non-square tiles, and a set of scale factors at which tiles of those dimensions are available. |
-| `service` | Optional | The `service` property provides a hook for additional information to be included in the image description, for example the physical size of the object depicted.  Please see the [Service Profiles][service-profiles] annex for more information. |
-| `attribution` | Optional | A human readable label that MUST be displayed when the image is displayed or used.  It might include copyright or ownership statements, or a simple acknowledgement of the providing institution. The value MAY contain simple HTML, using only the `a`, `b`, `br`, `i`, `img`, `p` and `span` tags. Clients may remove all tags before display, at their discretion.|
-| `license` | Optional | The URL of an external resource that describes the license or rights statement under which the image may be used. |
-| `logo` | Optional | The URL of a small image that represents an individual or organization associated with the image service.  The logo image MUST be displayed when the main image is displayed or used. |  
-
 {: .image-api-table}
-
-Please note that the `attribution`, `license` and `logo` properties have the same semantics and requirements as those in the [Presentation API][prezi-api]. When both APIs express attributions or logos that _MUST_ be displayed, then clients _MUST_ display both unless they are exactly identical.  While possible, it is _RECOMMENDED_ that logos with IIIF services do not, themselves, have logos.  Clients encountering logos with logos are _NOT_ required to display a potentially infinite set.
 
 The objects in the `sizes` list have the properties in the following table. Images requested using these sizes _SHOULD_ have a region parameter of "full" and rotation of "0". The full URL for an image with "default" quality in "jpg" format would be: `{base_url}/{identifier}/full/{width},{height}/0/default.jpg`
 
-| Property   | Required? | Description |
+| Size Object Property | Required? | Description |
 | ---------- | --------- | ----------- |
-| `width` | Required | The width of the image to be requested. |
-| `height` | Required | The height of the image to be requested. |
+| `width` | Required | The width in pixels of the image to be requested, given as an integer. |
+| `height` | Required | The height in pixels of the image to be requested, given as an integer. |
 {: .image-api-table}
 
 The objects in the `tiles` list have the properties in the following table. The `width` and `height` should be used to fill the region parameter and the `scaleFactors` to complete the size parameter of the image URL. This is described in detail in the [Implementation Notes][a-implementation-notes].
 
 The `width` of a tile, or the combination of `width` and `height` if `height` is specified, _MUST_ be unique among the members of the `tiles` list.
 
-| Property   | Required? | Description |
+| Tile Object Property | Required? | Description |
 | ---------- | --------- | ----------- |
 | `scaleFactors` | Required | The set of resolution scaling factors for the image's predefined tiles, expressed as positive integers by which to divide the full size of the image. For example, a scale factor of 4 indicates that the service can efficiently deliver images at 1/4 or 25% of the height and width of the full image. A particular scale factor value _SHOULD_ appear only once in the `tiles` list. |
-| `width` | Required | The width of the predefined tiles to be requested. |
-| `height` | Optional | The height of the predefined tiles to be requested.  If it is not specified in the JSON, then it defaults to the same as `width`, resulting in square tiles. |
+| `width` | Required | The width in pixels of the predefined tiles to be requested, given as an integer. |
+| `height` | Optional | The height in pixels of the predefined tiles to be requested, given as an integer. If it is not specified in the JSON, then it defaults to the same as `width`, resulting in square tiles. |
 {: .image-api-table}
 
-The objects in the `profiles` list have the properties in the following table.  The `@context`, `@id` and `@type` properties are _REQUIRED_ when the profile is dereferenced from a URI, but _SHOULD NOT_ be included in the Image Information response.
+Servers _SHOULD_ support requests for images with parameters specified by the `sizes` and `tiles` fields for all combinations of qualities and formats supported.
 
-| Property    | Required? | Description |
+The following shows a valid image information response, including the optional `sizes` and `tiles` properties.
+
+{% highlight json %}
+{
+  "@context" : "http://iiif.io/api/image/{{ page.major }}/context.json",
+  "@id" : "http://www.example.org/image-service/abcd1234/1E34750D-38DB-4825-A38A-B60A345E591C",
+  "protocol" : "http://iiif.io/api/image",
+  "width" : 6000,
+  "height" : 4000,
+  "sizes" : [
+    {"width" : 150, "height" : 100},
+    {"width" : 600, "height" : 400},
+    {"width" : 3000, "height": 2000}
+  ],
+  "tiles": [
+    {"width" : 512, "scaleFactors" : [1,2,4,8,16]}
+  ],
+  "profile" : [ "http://iiif.io/api/image/{{ page.major }}/level2.json" ]
+}
+{% endhighlight %}
+
+### 5.3. Profile Description
+
+In order to specify additional features that are supported for the image, a profile object may be added to the `profile` list. Objects in the `profile` list have the properties in the following table. The `@context`, `@id` and `@type` properties are _REQUIRED_ when the profile is dereferenced from a URI, but _SHOULD NOT_ be included in the Image Information response.
+
+| Profile Property | Required? | Description |
 | ----------- | --------- | ----------- |
 | `@context`  | Optional  | The string "http://iiif.io/api/image/{{ page.major }}/context.json". This should be included only if the profile's URI is dereferenced. |
 | `@id`       | Optional  | The URI of the profile. |
@@ -546,22 +565,101 @@ The set of features that may be specified in the `supports` property of an Image
 | `rotationBy90s` |   Rotation of images may be requested by degrees in multiples of 90.  |
 | `sizeAboveFull` | Size of images may be requested larger than the "full" size. |
 | `sizeByWhListed` | Size of images given in the `sizes` field of the Image Information document may be requested using the `w,h` syntax. |
-| `sizeByForcedWh` |   Size of images may be requested in the form "!w,h".  |
-| `sizeByH` |   Size of images may be requested in the form ",h".  |
-| `sizeByPct` |   Size of images may be requested in the form "pct:n".  |
-| `sizeByW` |   Size of images may be requested in the form "w,".  |
-| `sizeByWh` |   Size of images may be requested in the form "w,h".  |
+| `sizeByForcedWh` | Size of images may be requested in the form "!w,h".  |
+| `sizeByH` | Size of images may be requested in the form ",h".  |
+| `sizeByPct` | Size of images may be requested in the form "pct:n".  |
+| `sizeByW` | Size of images may be requested in the form "w,".  |
+| `sizeByWh` | Size of images may be requested in the form "w,h".  |
 {: .image-api-table}
 
 The set of features, formats and qualities supported is the union of those declared in all of the external profile documents and any embedded profile objects.  If a feature is not present in either the profile document or the `supports` property of an embedded profile, then a client _MUST_ assume that the feature is not supported.
 
-Servers _SHOULD_ support requests for images with parameters specified by the `sizes` and `tiles` fields for all combinations of `qualities` and `formats` supported.
-
-If any of `formats`, `qualities`, or `supports` have no additional values beyond those specified in the referenced compliance level, then the property _SHOULD_ be omitted from the response rather than being present with an empty list. 
+If any of `formats`, `qualities`, or `supports` have no additional values beyond those specified in the referenced compliance level, then the property _SHOULD_ be omitted from the response rather than being present with an empty list.
 
 URIs _MAY_ be added to the supports list of a profile to cover features not defined in this specification. Clients _MUST_ ignore URIs that are not recognized.
 
-The JSON response is structured as shown in the following example. The order of the keys in the response _SHOULD_ follow the order in the example.
+The following fragment shows a profile indicating support for additional formats, qualities, and features beyond level 2 [compliance][compliance-levels].
+
+{% highlight json %}
+{
+  "@context" : "http://iiif.io/api/image/{{ page.major }}/context.json",
+  "@id" : "http://www.example.org/image-service/abcd1234/1E34750D-38DB-4825-A38A-B60A345E591C",
+  "protocol" : "http://iiif.io/api/image",
+  //...
+  "profile" : [
+    "http://iiif.io/api/image/{{ page.major }}/level2.json",
+    {
+      "formats" : [ "gif", "pdf" ],
+      "qualities" : [ "color", "gray" ],
+      "supports" : [
+          "canonicalLinkHeader", "rotationArbitrary", "profileLinkHeader", "http://example.com/feature/"
+      ]
+    }
+  ]
+}
+{% endhighlight %}
+
+### 5.4. Rights and Licensing Properties
+
+| Rights and Licensing Property | Required? | Description |
+| ------------- | --------- | ----------- |
+| `attribution` | Optional  | Text that _MUST_ be shown when the image is displayed or used. It might include copyright or ownership statements, or a simple acknowledgement of the providing institution. The value _MAY_ contain simple HTML, using only the `a`, `b`, `br`, `i`, `img`, `p` and `span` tags, as described in the [HTML Markup in Property Values][prezi-html] section of the Presentation API. The value may be a string, an object, or a list of strings and/or objects. |
+| `license` | Optional | The URL of an external resource that describes the license or rights statement under which the image may be used. |
+| `logo` | Optional | The URL of a small image that represents an individual or organization associated with the image service. The logo image _MUST_ be clearly rendered when the main image is displayed or used. Clients _MUST NOT_ crop, rotate, or otherwise distort the image. The value may be a string or an object. |
+{: .image-api-table}
+
+The `attribution`, `license` and `logo` properties have the same semantics and requirements as those in the [Presentation API][prezi-api]. When both APIs express attributions or logos, then clients _MUST_ display both unless they are identical.
+
+In the case where multiple values are supplied for `attribution`, clients _MUST_ display at least one value. Clients _SHOULD_ try to match the language preferred by the user, and if the preferred language is unclear or unavailable, then the client may choose which value to display.
+
+The value of the `logo` property may be an object in order to indicate the URI of the image and an IIIF Image API [service](#related-services) for the logo. While possible, it is _RECOMMENDED_ that logos with IIIF services do not, themselves, have logos. Clients encountering logos with logos are _NOT_ required to display a potentially infinite set.
+
+The following shows a simple use of each of these properties:
+
+{% highlight json %}
+{
+  "@context" : "http://iiif.io/api/image/{{ page.major }}/context.json",
+  "@id" : "http://www.example.org/image-service/abcd1234/1E34750D-38DB-4825-A38A-B60A345E591C",
+  "protocol" : "http://iiif.io/api/image",
+  //...
+  "attribution" : "Provided by Example Organization",
+  "logo" : "http://example.org/images/logo.png",
+  "license" : "http://example.org/rights/license1.html",
+  //...
+}
+{% endhighlight %}
+
+More complex examples are given in the [Complete Response Example](#complete-response).
+
+### 5.5. Related Services
+
+| Property   | Required? | Description |
+| ---------- | --------- | ----------- |
+| `service`  | Optional  | The `service` property provides hooks for additional information to be included in the image description, for example a link to an authentication service. The value may be an object or a list of objects. |
+{: .image-api-table}
+
+There _MAY_ be one or more services associated with an image. See the [Service Profiles][service-profiles] annex for more information.
+
+The following shows a simple use of `service` to associate geographic metadata with the image.
+
+{% highlight json %}
+{
+  "@context" : "http://iiif.io/api/image/{{ page.major }}/context.json",
+  "@id" : "http://www.example.org/image-service/abcd1234/1E34750D-38DB-4825-A38A-B60A345E591C",
+  "protocol" : "http://iiif.io/api/image",
+  //...
+  "service": {
+    "@context" : "http://geojson.org/contexts/geojson-base.jsonld",
+    "@id" : "http://www.example.org/geojson/paris.json"
+  }
+}
+{% endhighlight %}
+
+More complex examples are given in the [Complete Response Example](#complete-response).
+
+### 5.6. Complete Response
+
+The following shows a response including all of the required and optional image information properties.
 
 {% highlight json %}
 {
@@ -576,32 +674,53 @@ The JSON response is structured as shown in the following example. The order of 
     {"width" : 3000, "height": 2000}
   ],
   "tiles": [
-    {"width" : 512, "scaleFactors" : [1,2,4,8,16]}
+    {"width" : 512, "scaleFactors" : [1,2,4]},
+    {"width" : 1024, "height" : 2048, "scaleFactors" : [8,16]}
   ],
-  "attribution" : "<span>Provided by Example Organization</span>",
-  "logo" : "http://example.org/image-service/logo/full/full/0/default.jpg",
-  "license" : "http://example.org/rights/license1.html",
+  "attribution" : [
+    {
+      "@value" : "<span>Provided by Example Organization</span>",
+      "@language" : "en"
+    },{
+      "@value" : "<span>Darparwyd gan Enghraifft Sefydliad</span>",
+      "@language" : "cy"
+    }
+  ],
+  "logo" : {
+      "@id" : "http://example.org/image-service/logo/full/200,/0/default.png",
+      "service" : {
+        "@context" : "http://iiif.io/api/image/2/context.json",
+        "@id" : "http://example.org/image-service/logo",
+        "profile" : "http://iiif.io/api/image/2/profiles/level2.json"
+      }
+  },
+  "license" : [
+    "http://example.org/rights/license1.html",
+    "https://creativecommons.org/licenses/by/4.0/"
+  ],
   "profile" : [
     "http://iiif.io/api/image/{{ page.major }}/level2.json",
     {
       "formats" : [ "gif", "pdf" ],
       "qualities" : [ "color", "gray" ],
       "supports" : [
-          "canonicalLinkHeader", "rotationArbitrary", "profileLinkHeader", "http://example.com/feature/"
+        "canonicalLinkHeader", "rotationArbitrary", "profileLinkHeader", "http://example.com/feature/"
       ]
     }
   ],
-  "service" : {
-    "@context": "http://iiif.io/api/annex/service/physdim/1/context.json",
-    "profile": "http://iiif.io/api/annex/service/physdim",
-    "physicalScale": 0.0025,
-    "physicalUnits": "in"
-  }
+  "service" : [
+    {
+      "@context": "http://iiif.io/api/annex/service/physdim/1/context.json",
+      "profile": "http://iiif.io/api/annex/service/physdim",
+      "physicalScale": 0.0025,
+      "physicalUnits": "in"
+    },{
+      "@context" : "http://geojson.org/contexts/geojson-base.jsonld",
+      "@id" : "http://www.example.org/geojson/paris.json"
+    }
+  ]
 }
 {% endhighlight %}
-
-Using the [supplied JSON-LD frame][annex-frames] will result in the correct structure.
-
 
 ##  6. Compliance Levels
 
@@ -696,7 +815,7 @@ Early sanity checking of URIs (lengths, trailing GET, invalid characters, out-of
 
 {% highlight python %}
     # Calculate region parameters /xr,yr,wr,hr/
-    xr = n * tw * s 
+    xr = n * tw * s
     yr = m * th * s
     wr = tw * s
     if (xr + wr > width):
@@ -773,12 +892,13 @@ Many thanks to  Ben Albritton, Matthieu Bonicel, Anatol Broder, Kevin Clarke, To
 [iiif-community]: /community.html "IIIF Community"
 [versioning]: /api/annex/notes/semver.html "Versioning of APIs"
 [prezi-api]: /api/presentation/{{ site.presentation_api.latest.major }}.{{ site.presentation_api.latest.minor }}/ "Presentation API"
+[prezi-html]: /api/presentation/{{ site.presentation_api.latest.major }}.{{ site.presentation_api.latest.minor }}/#property-values-in-html "Presentation API Section 5.3.4"
 
 [service-profiles]: /api/annex/services/ "Services Annex Document"
 [annex-frames]: /api/annex/notes/frames.html "JSON-LD Frames Implementation Notes"
 [apache-notes]: /api/annex/notes/apache.html "Apache HTTP Server Implementation Notes"
 [apache-notes-conditional-content-type]: /api/annex/notes/apache.html#conditional-content-types "Apache HTTP Server Implementation Notes: Conditional Content Types"
-[apache-notes-set-compliance-link-header]: /api/annex/notes/apache.html#set-compliance-link-header "Apache HTTP Server Implementation Notes: Set Compliance Link Header" 
+[apache-notes-set-compliance-link-header]: /api/annex/notes/apache.html#set-compliance-link-header "Apache HTTP Server Implementation Notes: Set Compliance Link Header"
 [audience-and-scope]: #audience-and-scope "1. Audience and Scope"
 [uri-syntax]: #uri-syntax "2. URI Syntax"
 [image-request-uri-syntax]: #image-request-uri-syntax "2.1. Image Request URI Syntax"
