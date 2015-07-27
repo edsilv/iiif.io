@@ -165,7 +165,7 @@ license
     * Any resource _MAY_ have one or more licenses associated with it.
 
 logo
-:   A small image that represents an individual or organization associated with the resource it is attached to.  This could be the logo of the owning or hosting institution.  It is _RECOMMENDED_ that a [IIIF Image API][image-api] service be available for this image for manipulations such as resizing.
+:   A small image that represents an individual or organization associated with the resource it is attached to.  This could be the logo of the owning or hosting institution. The logo _MUST_ be clearly rendered when the resource is displayed or used, without cropping, rotating or otherwise distorting the image. It is _RECOMMENDED_ that a [IIIF Image API][image-api] service be available for this image for manipulations such as resizing. 
 
     Usage:
     {: .usage}
