@@ -1541,6 +1541,7 @@ Many thanks to Matthieu Bonicel, Tom Cramer, Ian Davis, Markus Enders, Renhart G
 [openannomulti]: http://www.openannotation.org/spec/core/multiplicity.html#Choice
 [linked-data]: http://linkeddata.org/ "Linked Data"
 [web-arch]: http://www.w3.org/TR/webarch/ "Architecture of the World Wide Web"
+[json-ld]: http://www.w3.org/TR/json-ld/ "JSON-LD"
 [json-ld-68]: http://www.w3.org/TR/json-ld/#interpreting-json-as-json-ld "Interpreting JSON as JSON-LD"
 [rfc5646]: http://tools.ietf.org/html/rfc5646 "RFC 5646"
 [media-frags]: http://www.w3.org/TR/media-frags/#naming-space "Media Fragments"
