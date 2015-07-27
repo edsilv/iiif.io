@@ -169,7 +169,7 @@ logo
 
     Usage:
     {: .usage}
-    * Any resource _MAY_ have one or more logos associated with it.
+    * Any resource _MAY_ have exactly one logo associated with it.
 
 
 ####  4.3. Technical Properties
