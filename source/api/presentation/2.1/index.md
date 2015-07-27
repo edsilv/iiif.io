@@ -5,7 +5,7 @@ id: presentation-api
 layout: spec
 tags: [specifications, presentation-api]
 major: 2
-minor: 0
+minor: 1
 patch: 0
 pre: final
 ---
@@ -29,11 +29,6 @@ _Copyright © 2012-2015 Editors and contributors. Published by the IIIF under th
   * Simeon Warner, _Cornell University_
   {: .names}
 
-## Abstract
-{:.no_toc}
-This document describes an API to deliver structural and presentation information about digital content proposed by the International Image Interoperability Framework (IIIF) group. The IIIF Presentation API specifies a web service that returns JSON-LD structured documents that together describe the structure and layout of a digitized object or other collection of images and related content. Many different styles of viewer can be implemented that consume the information to enable a rich and dynamic user experience, consuming content from across collections and hosting institutions.
-
-Please send feedback to [iiif-discuss@googlegroups.com][iiif-discuss]
 
 ## Table of Contents
 {:.no_toc}
@@ -49,7 +44,9 @@ This document describes how the structure and layout of a complex image-based ob
 
 An object may comprise a series of pages, surfaces or other views; for example the single view of a painting, the two sides of a photograph, four cardinal views of a statue, or the many pages of an edition of a newspaper or book. The primary requirements for the Presentation API are to provide an order for these views, the resources needed to display a representation of the view, and the descriptive information needed to allow the user to understand what is being seen.
 
-The principles of [Linked Data][linked-data] and the [Architecture of the Web][web-arch] are adopted in order to provide a distributed and interoperable system. The [Shared Canvas data model][shared-canvas] is leveraged in a specific, JSON-based format that is easy to implement without understanding RDF, while still being completely compatible with it.
+The principles of [Linked Data][linked-data] and the [Architecture of the Web][web-arch] are adopted in order to provide a distributed and interoperable system. The [Shared Canvas data model][shared-canvas] and [JSON-LD][json-ld] are leveraged to create an easy-to-implement, JSON-based format.
+
+Please send feedback to [iiif-discuss@googlegroups.com][iiif-discuss]
 
 ### 1.1. Objectives and Scope
 
@@ -69,7 +66,7 @@ The following are __not__ within scope:
 Note that in the following descriptions, "object" (or "physical object") is used to refer to a physical object that has been digitized or a born-digital compound object, and "resources" refer to the digital resources that are the result of that digitization or digital creation process.
 
 
-##  1.2. Motivating Use Cases
+###  1.2. Motivating Use Cases
 
 There are many different types of digitized or digital compound objects, from ancient scrolls to modern newspapers, from medieval manuscripts to online comics, and from large maps to small photographs. Many of them bear texts, sometimes difficult to read either due to the decay of the physical object or lack of understanding of the script or language.  These use cases are described in a separate [document][use-case-doc].
 
