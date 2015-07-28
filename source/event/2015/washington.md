@@ -34,7 +34,7 @@ Tuesday, 5th of May 2015
 | 15:15 - 16:20  | Introducing the [Presentation API][prezi-api] | Robert Sanderson |
 | 16:20 - 16:45  | Getting Started | Mike Appleby |
 | 16:45 - 17:00  | Next Steps & Close | Tom Cramer |
-{: .image-api-table}
+{: .api-table}
 
 ## Logistics
 
