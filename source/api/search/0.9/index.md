@@ -77,7 +77,7 @@ This specification details how, within the context of IIIF, search and auto-comp
 
 ## 3. Search
 
-The search service takes a query, including at least one search term or uri, and optionally filtering further by date the annotation was last created or modified, or the motivation for the annotation as to whether it is painting a resource on to a canvas, or other types of annotation such as comments about a target resource. 
+The search service takes a query, including at least one search term or uri, and optionally filtering further by date the annotation was last created or modified, or the motivation for the annotation as to whether it is painting a resource on to a canvas, or other types of annotation such as comments about a target resource.
 
 ### 3.1. Request
 
@@ -87,7 +87,7 @@ To perform a search, the client issues an HTTP GET request to the endpoint, with
 
 __Search Query Parameters__
 
-| Parameter  | Definition | 
+| Parameter  | Definition |
 | ---------  | ---------- |
 | q          | The search terms to search in textual bodies.  The semantics of multiple, space separated terms is server implementation dependent; they may be treated as a phrase, that all are required, or that at least one is required. |
 | motivation | The motivation of the annotation. Acceptable values are given below, and the default if not present is all motivations.  Support for this field is not required. |
@@ -121,7 +121,7 @@ Would search for annotations with the word "bird" in their textual content, and 
 
 ### 3.2. Response
 
-The response from the server is an Annotation List, following the format from the Presentation API with a few additional features. 
+The response from the server is an Annotation List, following the format from the Presentation API with a few additional features.
 
 The search results are returned as Annotations, in the regular IIIF syntax. Note that the annotations can come from multiple canvases, rather than the default situation from the Presentation API where all of the annotations target a single canvas.
 
@@ -141,7 +141,7 @@ Example response with a the first annotation from a total of 125:
   "@id":"http://example.org/service/identifier/search?q=bird&motivation=painting",
   "@type":"sc:AnnotationList",
   "within": {
-    "@type": "sc:Layer", 
+    "@type": "sc:Layer",
     "total":125
   },
   "next": "http://example.org/service/identifier/search?q=bird&motivation=painting&page=2",
@@ -161,7 +161,7 @@ Example response with a the first annotation from a total of 125:
       },
       "on": {
         "@id": "http://www.example.org/iiif/identifier/canvas/p1#xywh=10,10,400,80",
-        "within": { 
+        "within": {
           "@id": "http://www.example.org/iiif/identifier/manifest",
           "@type": "sc:Manifest"
         }
@@ -170,7 +170,6 @@ Example response with a the first annotation from a total of 125:
   ]
 }
 {% endhighlight %}
-{: .urltemplate}
 
 The additional fields added by the search API to the regular set of fields from the Presentation API are:
 
@@ -220,7 +219,7 @@ __Additional Query Parameters__
 
 ### 4.2. Response
 
-The response is a list of very simple objects that include the term and its number of occurrences.  The number of terms provided is determined by the server, but may be split into pages if necessary with `next` and `prev` links. 
+The response is a list of very simple objects that include the term and its number of occurrences.  The number of terms provided is determined by the server, but may be split into pages if necessary with `next` and `prev` links.
 
 {% highlight json %}
 {
@@ -234,7 +233,6 @@ The response is a list of very simple objects that include the term and its numb
   ]
 }
 {% endhighlight %}
-{: .urltemplate}
 
 __Properties__
 
@@ -258,7 +256,6 @@ In the Presentation API, objects such as Manifests, Ranges, Layers or even Canva
   }
 }
 {% endhighlight %}
-{: .urltemplate}
 
 The auto-complete service is related specifically to a search service, and is thus referenced from within the search service's description.
 
@@ -274,13 +271,11 @@ The auto-complete service is related specifically to a search service, and is th
   }
 }
 {% endhighlight %}
-{: .urltemplate}
+
 
 ## Appendices
 
-### A. Requirements
-
-Parameter Requirements
+### A. Parameter Requirements
 
 | Parameter | Required in Request | Required in Search | Required in Autocomplete |
 | --------- | ------------------- | ------------------ | ------------------------ |
@@ -290,7 +285,7 @@ Parameter Requirements
 | `uri`     | optional | optional | optional |
 | `box`    | optional | optional | optional |
 | `min`     | optional | n/a | optional |
-
+{: .api-table}
 
 ### B. Versioning
 
@@ -307,6 +302,7 @@ Many thanks to the members of the [IIIF][iiif-community] for their continuous en
 | Date       | Description                                        |
 | ---------- | -------------------------------------------------- |
 | 2015-07-20 | Version 0.9 (Trip Life) draft                        |
+{: .api-table}
 
 
 [cc-by]: http://creativecommons.org/licenses/by/4.0/ "Creative Commons &mdash; Attribution 4.0 International"
