@@ -15,8 +15,6 @@ cssversion: 2
 {:.no_toc}
 __This Version:__ {{ page.major }}.{{ page.minor }}.{{ page.patch }}{% if page.pre != 'final' %}-{{ page.pre }}{% endif %}
 
-_Copyright © 2015 Editors and contributors. Published by the IIIF under the [CC-BY][cc-by] license._
-
 __Beta Specification for Trial Use__
 This is a work in progress. We are actively seeking implementations and feedback.  No section should be considered final, and the absence of any content does not imply that such content is out of scope, or may not appear in the future.  Please send any feedback to [iiif-discuss@googlegroups.com][iiif-discuss].
 {: .alert}
@@ -30,6 +28,10 @@ This is a work in progress. We are actively seeking implementations and feedback
   * Simeon Warner, _Cornell University_
   {: .names}
 
+
+_Copyright © 2015 Editors and contributors. Published by the IIIF under the [CC-BY][cc-by] license._
+
+
 ## Table of Contents
 {:.no_toc}
 
@@ -41,6 +43,8 @@ This is a work in progress. We are actively seeking implementations and feedback
 In the IIIF [Presentation API][prezi-api], content is brought together from distributed systems via annotations.  That content might be images, often with a IIIF [Image API][image-api] service to access them, audio, video, rich or plain text, or anything else.  In a vibrant and dynamic system, that content can come from many sources and be rich, varied and abundant.  Of that list, textual content lends itself to being searched, either as the transcription, translation or edition of the intellectual content, or commentary, description, tagging or other annotations about the resource.  
 
 This specification lays out the interoperability mechanism for performing these searches within the IIIF context.  The scope of the specification is searching only textual annotation content within a single IIIF resource, such as a Manifest or Range.  Every effort is made to keep the interaction as consistent with existing IIIF patterns as possible.
+
+In order to make searches easier against unknown content, a related service for the auto-completion of search terms is also specified. The auto-complete service is specific to a search service to ensure that the retrieved terms can simply be copied to the query of the search.
 
 Please send feedback to [iiif-discuss@googlegroups.com][iiif-discuss]
 
@@ -55,13 +59,11 @@ Use cases for being able to search the annotations within the Presentation API i
  * Searching for user provided commentary about the resource, either as a discovery mechanism for the resource or for the discussion.
  * Discovering similar sections of text to compare either the content or the object
 
-User interface considerations include highlight matching words in the display, providing a heatmap of where the matches occur within the object, and providing a mechanism to jump between points within the object.
+User interfaces that could be built using the search response include highlighting matching words in the display, providing a heatmap of where the matches occur within the object, and providing a mechanism to jump between points within the object.  The auto-complete service assists users in identifying terms that exist within the selected scope.
 
 ### 1.2. Terminology
 
 The key words _MUST_, _MUST NOT_, _REQUIRED_, _SHALL_, _SHALL NOT_, _SHOULD_, _SHOULD NOT_, _RECOMMENDED_, _MAY_, and _OPTIONAL_ in this document are to be interpreted as described in [RFC 2119][rfc-2119].
-
-
 
 ## 2. Overview
 
@@ -77,30 +79,44 @@ This specification details how, within the context of IIIF, search and auto-comp
 
 ## 3. Search
 
-The search service takes a query, including at least one search term or uri, and optionally filtering further by date the annotation was last created or modified, or the motivation for the annotation as to whether it is painting a resource on to a canvas, or other types of annotation such as comments about a target resource.
+The search service takes a query, including at least one search term or uri, and optionally filtering further by date the annotation was last created or modified, or the motivation for the annotation as to whether it is painting a resource on to a canvas.
 
-### 3.1. Request
+### 3.1. Service Description
 
-The search request is made to a service endpoint that is related to a particular IIIF Presentation API resource.  The URIs for the endpoints must be different to allow the client to search within a specific scope.  The URI is given in a service description related to the resource.
+{% highlight json %}
+{
+  "service": {
+    "@id": "http://example.org/services/identifier/search",
+    "profile": "http://iiif.io/api/search/{{ page.major }}/search"
+  }
+}
+{% endhighlight %}
+
+
+
+### 3.2. Request
+
+The search request is made to a service endpoint that is related to a particular IIIF Presentation API resource.  The URIs for the endpoints must be different to allow the client to search within a specific scope.  The URI is given in a `service` description related to the resource.
 
 To perform a search, the client issues an HTTP GET request to the endpoint, with query parameters to specify the search terms.
 
 __Search Query Parameters__
 
-| Parameter  | Definition |
+All parameters are _OPTIONAL_ in the request.  The default, if a parameter is empty or not supplied, is to not restrict the matching annotations by that parameter.  Servers _MUST_ implement the `q` parameter, and _SHOULD_ implement the `motivation` parameter, the others are _OPTIONAL_.
+
+| Parameter  | Definition | 
 | ---------  | ---------- |
-| q          | The search terms to search in textual bodies.  The semantics of multiple, space separated terms is server implementation dependent; they may be treated as a phrase, that all are required, or that at least one is required. |
-| motivation | The motivation of the annotation. Acceptable values are given below, and the default if not present is all motivations.  Support for this field is not required. |
-| date       | A date range in ISO8601 format: `YYYY-MM-DDThh:mm:ssZ/YYYY-MM-DDThh:mm:ssZ` Dates must be expressed in UTC (and must be given in the `Z` based format) The default if not supplied is for all dates. Support for this field is not required. |
-| uri        | A space separated list of URIs to filter the annotations by.  The URIs may be present in any of the fields of the annotation other than target, including the identity of users, clients, body as semantic tag or content resource. Support for this field is not required. |
-| box        | A box specified as `x,y,w,h` that limits the area of a Canvas that the annotation must overlap with.  Annotations that target the entire Canvas are considered to overlap with all possible bounding boxes.  The default if not supplied is the entire canvas. |
+| q          | A space separated list of search terms. The search terms _MAY_ be either words (to search in textual bodies) or URIs (to search identities of annotation body resources).  The semantics of multiple, space separated terms is server implementation dependent.|
+| motivation | A space separated list of motivation terms. If multiple motivations are supplied, an annotation matches the search if any of the motivations are present. Expected values are given below. |
+| date       | A space separated list of date ranges.  An annotation matches if the date on which it was created falls within any of the supplied date ranges. The dates _MUST_ be supplied in the ISO8601 format: `YYYY-MM-DDThh:mm:ssZ/YYYY-MM-DDThh:mm:ssZ`. The dates _MUST_ be expressed in UTC and _MUST_ be given in the `Z` based format. |
+| user       | A space separated list of URIs that are the identities of users. If multiple users are supplied, an annotation matches the search if any of the users created the annotation. |
+| box        | A space separated list of boxes specified as `x,y,w,h` that limits the area of a canvas that matching annotation must overlap with.  Annotations that target the entire canvas are considered to overlap with all possible bounding boxes. |
 {: .api-table}
 
-The accepted values for the motivation parameter are:
+Common values for the motivation parameter are:
 
 | Motivation | Definition |
 | ---------- | ---------- |
-| `all`          | All annotations (default, if not supplied) |
 | `painting`     | Only annotations with the `sc:painting` motivation |
 | `non-painting` | Annotations with any motivation other than `sc:painting` |
 | `commenting`   | Annotations with the `oa:commenting` motivation |
@@ -109,6 +125,8 @@ The accepted values for the motivation parameter are:
 {: .api-table}
 
 Other motivations are possible, and the full list from the [Open Annotation][openanno] specification should be available by dropping the "oa:" prefix.
+
+Parameters that are received in a request but not implemented _MUST_ be ignored, and _SHOULD_ be included in the `ignored` property of the Layer in the response.
 
 Example request:
 
@@ -121,13 +139,13 @@ Would search for annotations with the word "bird" in their textual content, and 
 
 ### 3.2. Response
 
-The response from the server is an Annotation List, following the format from the Presentation API with a few additional features.
+The response from the server is an AnnotationList, following the format from the Presentation API with a few additional features.
 
 The search results are returned as Annotations, in the regular IIIF syntax. Note that the annotations can come from multiple canvases, rather than the default situation from the Presentation API where all of the annotations target a single canvas.
 
-For very long lists of annnotations, the server may choose to divide the response into multiple sections, often called pages.  Each page of the response can refer to the previous and next page, to allow the client to traverse the entire set.  The next page of results is referenced in a `next` field of the AnnotationList, and the previous in a `prev` field.
+For very long lists of annnotations, the server may choose to divide the response into multiple sections, often called pages.  Each page of the response can refer to the previous and next page, to allow the client to traverse the entire set.  The next page of results _MUST_ be referenced in a `next` property of the AnnotationList, and the previous page _MUST_ be referenced in a `prev` property.  Pages _SHOULD_ refer to the first and last pages with `first` and `last` properties, respectively.
 
-Each paged AnnotationList references a Layer.  The Layer does not need to have a URI, and must be included in every AnnotationList in the set of pages.  The Layer has a "total" property which is the total number of hits generated by the query.
+Each paged AnnotationList references the Layer that represents the entire resultset.  The Layer does not need to have a URI, and must be included in every AnnotationList.  The Layer _SHOULD_ have a `total` property which is the total number of hits generated by the query, and _SHOULD_ have a `ignored` property with a list of the ignored parameters from the request, if any.
 
 For textual searches, it is also useful to include the text before the matching word or phrase, and the text after it, but still within the annotation's content. This can be achieved with the `prefix` (text before), `suffix` (text after) and `exact` (matched text) fields on the resource of the annotation.  The `exact` field is useful when stemming or other transformations of the query term have been applied before matching against the index.
 
@@ -137,15 +155,16 @@ Example response with a the first annotation from a total of 125:
 
 {% highlight json %}
 {
-  "@context":"http://iiif.io/api/search/1/context.json",
-  "@id":"http://example.org/service/identifier/search?q=bird&motivation=painting",
+  "@context":"http://iiif.io/api/search{{ page.major }}/context.json",
+  "@id":"http://example.org/service/identifier/search?q=bird&motivation=painting&box=0,0,100,100",
   "@type":"sc:AnnotationList",
   "within": {
     "@type": "sc:Layer",
-    "total":125
+    "total": 125,
+    "ignored": ["motivation", "box"]
   },
-  "next": "http://example.org/service/identifier/search?q=bird&motivation=painting&page=2",
-  "last": "http://example.org/service/identifier/search?q=bird&motivation=painting&page=125",
+  "next": "http://example.org/service/identifier/search?q=bird&page=2",
+  "last": "http://example.org/service/identifier/search?q=bird&page=13",
   "startIndex": 0,
 
   "resources": [
@@ -165,8 +184,9 @@ Example response with a the first annotation from a total of 125:
           "@id": "http://www.example.org/iiif/identifier/manifest",
           "@type": "sc:Manifest"
         }
-	  }
-    }
+      }
+    },
+    // next nine annotations ...
   ]
 }
 {% endhighlight %}
@@ -204,6 +224,23 @@ __Properties of Textual Annotation Bodies__
 
 The autocomplete service returns terms that can be added into the `q` parameter of the related search service, given the first characters of the term.
 
+### 4.1. Service Description
+
+{% highlight json %}
+{
+  "service": {
+    "@id": "http://example.org/services/identifier/search",
+    "profile": "http://iiif.io/api/search{{ page.major }}/search",
+    "service": {
+      "@id": "http://example.org/services/identifier/autocomplete",
+      "profile": "http://iiif.io/api/search{{ page.major }}/autocomplete"
+    }
+  }
+}
+{% endhighlight %}
+
+
+
 ### 4.1. Request
 
 The request is very similar to the search request, with one additional parameter to allow the number of occurrences of the term within the object to be constrained.  The value of the `q` parameter is the beginning characters from the term to be completed by the service.  For example, the query term of 'bir' might complete to 'bird', 'biro', 'birth', and 'birthday'.
@@ -223,7 +260,7 @@ The response is a list of very simple objects that include the term and its numb
 
 {% highlight json %}
 {
-  "@context": "http://iiif.io/api/search/1/context.json",
+  "@context": "http://iiif.io/api/search/{{ page.major }}/context.json",
   "@id": "http://example.org/service/identifier/autocomplete?q=bir&motivation=painting",
   "terms": [
   	{"value": "bird", "count": 15},
@@ -248,29 +285,10 @@ __Properties__
 
 In the Presentation API, objects such as Manifests, Ranges, Layers or even Canvases may have search services associated with them.
 
-{% highlight json %}
-{
-  "service": {
-    "@id": "http://example.org/services/identifier/search",
-    "profile": "http://iiif.io/api/search/1/search"
-  }
-}
-{% endhighlight %}
+
 
 The auto-complete service is related specifically to a search service, and is thus referenced from within the search service's description.
 
-{% highlight json %}
-{
-  "service": {
-    "@id": "http://example.org/services/identifier/search",
-    "profile": "http://iiif.io/api/search/1/search",
-    "service": {
-      "@id": "http://example.org/services/identifier/autocomplete",
-      "profile": "http://iiif.io/api/search/1/autocomplete"
-    }
-  }
-}
-{% endhighlight %}
 
 
 ## Appendices
@@ -289,7 +307,7 @@ The auto-complete service is related specifically to a search service, and is th
 
 ### B. Versioning
 
-Starting with version 2.0, this specification follows [Semantic Versioning][semver]. See the note [Versioning of APIs][versioning] for details regarding how this is implemented.
+This specification follows [Semantic Versioning][semver]. See the note [Versioning of APIs][versioning] for details regarding how this is implemented.
 
 ### C. Acknowledgements
 
